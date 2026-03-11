@@ -23,58 +23,43 @@
 </div>
 
 <script type="module">
-  // Импортируем модули Firebase
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-  // ТВОИ КЛЮЧИ СО СКРИНШОТF (добавила свои ключи)
   const firebaseConfig = { 
-  apiKey : "AIzaSyCy7gn4BC0WbnMfar5PBuDfQY1I-dbTjx0" , 
-  authDomain : "nutakoe001-1159c.firebaseapp.com" , 
-  projectId : "nutakoe001-1159c" , 
-  storageBucket : "nutakoe001-1159c.firebasestorage.app" , 
-  messagingSenderId : "399913093520" , 
-  appId : "1:399913093520:web:89ad6df0d7025651edcb15" ,  
-};
+    apiKey: "AIzaSyCy7gn4BC0WbnMfar5PBuDfQY1I-dbTjx0", 
+    authDomain: "nutakoe001-1159c.firebaseapp.com", 
+    projectId: "nutakoe001-1159c", 
+    storageBucket: "nutakoe001-1159c.firebasestorage.app", 
+    messagingSenderId: "399913093520", 
+    appId: "1:399913093520:web:89ad6df0d7025651edcb15"  
+  };
 
-  // Инициализация
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Логика кнопки
-  document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  const form = document.getElementById("feedbackForm");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); // Важно: предотвращаем перезагрузку страницы
 
     const nameInput = document.getElementById("userName").value;
     const emailInput = document.getElementById("userEmail").value;
 
     try {
-      // Запись в коллекцию "requests"
-      await addDoc(collection(db, "requests"), {
-        name: nameInput,
-        email: emailInput,
-        timestamp: new Date() // добавил от себя, чтобы вы видели время заявки (я скопировала)
-      });
-
-      alert("Данные успешно отправлены в облако!");
-      document.getElementById("feedbackForm").reset();
-    } catch (error) {
-      console.error("Ошибка при отправке: ", error);
-      alert("Произошла ошибка. Проверьте консоль.");
-    }
-  });
-try {
-      // Запись в коллекцию "requests"
+      // Выполняем запись один раз
       await addDoc(collection(db, "requests"), {
         name: nameInput,
         email: emailInput,
         timestamp: new Date()
       });
-      alert("Готово! Данные сохранены в Firebase.");
-      document.getElementById("feedbackForm").reset();
+
+      alert("Данные успешно отправлены в Firebase!");
+      form.reset(); 
+
     } catch (error) {
-      console.error("Ошибка записи: ", error);
-      alert("Ошибка при отправке.");
+      console.error("Ошибка при отправке: ", error);
+      alert("Произошла ошибка. Проверьте правила доступа в консоли Firebase.");
     }
   });
 </script>
