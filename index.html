@@ -143,25 +143,32 @@ window.deletePost = async (id, authorEmail) => {
         const feed = document.getElementById('feed');
         feed.innerHTML = "";
         snapshot.forEach((doc) => {
-            const data = doc.data();
-const isMyPost = auth.currentUser && data.email === auth.currentUser.email;
 
-        feed.innerHTML += `
-            <div class="post">
-                <div class="post-header">
-                    <img src="${data.photo || 'https://via.placeholder.com/30'}" class="post-avatar" style="width:30px; border-radius:50%">
-                    <b>${data.name}</b>
-                    <span class="time">${data.timestamp?.toDate().toLocaleTimeString() || '...'}</span>
-                </div>
-                <p>${data.text}</p>
-                <div style="display: flex; gap: 10px;">
+            const data = doc.data();
+
+            feed.innerHTML += `
+
+                <div class="post">
+
+                    <div class="post-header">
+
+                        <img src="${data.photo || 'https://via.placeholder.com/30'}" class="post-avatar" style="width:30px; border-radius:50%">
+
+                        <b>${data.name}</b>
+
+                        <span class="time">${data.timestamp?.toDate().toLocaleTimeString() || '...'}</span>
+
+                    </div>
+
+                    <p>${data.text}</p>
+
                     <button class="like-btn" onclick="processLike('${doc.id}')">👍 ${data.likes || 0}</button>
-                    
-                    ${isMyPost ? `<button onclick="deletePost('${doc.id}')" style="background:#ff4757; width:auto;">🗑 Удалить</button>` : ''}
-                </div>
-            </div>`;
+
+                </div>`;
+
+        });
+
     });
-});
 </script>
 </body>
 </html>
