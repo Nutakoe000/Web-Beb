@@ -148,7 +148,14 @@
 
 
 
-    loginBtn.onclick = () => signInWithPopup(auth, provider);
+loginBtn.onclick = async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (error) {
+        console.error("Ошибка входа:", error.code);
+        alert("Ошибка: " + error.message);
+    }
+};
 
     logoutBtn.onclick = () => signOut(auth);
 
