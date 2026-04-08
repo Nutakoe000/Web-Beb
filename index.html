@@ -119,6 +119,20 @@
         }
     };
 
+    import { deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+// Функция удаления
+window.deletePost = async (id, authorEmail) => {
+    // Проверка на стороне клиента (для удобства)
+    if (auth.currentUser.email !== authorEmail) {
+        return alert("Вы можете удалять только свои посты!");
+    }
+
+    if (confirm("Вы точно хотите удалить этот пост?")) {
+        await deleteDoc(doc(db, "requests", id));
+    }
+};
+
     // Лента
     const q = query(collection(db, "requests"), orderBy("timestamp", "desc"));
     onSnapshot(q, (snapshot) => {
@@ -126,18 +140,24 @@
         feed.innerHTML = "";
         snapshot.forEach((doc) => {
             const data = doc.data();
-            feed.innerHTML += `
-                <div class="post">
-                    <div class="post-header">
-                        <img src="${data.photo || 'https://via.placeholder.com/30'}" class="post-avatar" style="width:30px; border-radius:50%">
-                        <b>${data.name}</b>
-                        <span class="time">${data.timestamp?.toDate().toLocaleTimeString() || '...'}</span>
-                    </div>
-                    <p>${data.text}</p>
+const isMyPost = auth.currentUser && data.email === auth.currentUser.email;
+
+        feed.innerHTML += `
+            <div class="post">
+                <div class="post-header">
+                    <img src="${data.photo || 'https://via.placeholder.com/30'}" class="post-avatar" style="width:30px; border-radius:50%">
+                    <b>${data.name}</b>
+                    <span class="time">${data.timestamp?.toDate().toLocaleTimeString() || '...'}</span>
+                </div>
+                <p>${data.text}</p>
+                <div style="display: flex; gap: 10px;">
                     <button class="like-btn" onclick="processLike('${doc.id}')">👍 ${data.likes || 0}</button>
-                </div>`;
-        });
+                    
+                    ${isMyPost ? `<button onclick="deletePost('${doc.id}')" style="background:#ff4757; width:auto;">🗑 Удалить</button>` : ''}
+                </div>
+            </div>`;
     });
+});
 </script>
 </body>
 </html>
