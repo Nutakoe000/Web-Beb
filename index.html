@@ -245,7 +245,24 @@ loginBtn.onclick = async () => {
 
     };
 
+import { query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
+// Функция для смены режима ленты
+window.toggleFeed = (onlyMine = false) => {
+    let newQuery;
+    const colRef = collection(db, "requests");
+    
+    if (onlyMine) {
+        // Запрос с фильтром по email
+        newQuery = query(colRef, where("email", "==", auth.currentUser.email), orderBy("timestamp", "desc"));
+    } else {
+        // Обычный запрос
+        newQuery = query(colRef, orderBy("timestamp", "desc"));
+    }
+    
+    // Переподписываемся на обновления (нужно вынести логику onSnapshot в отдельную функцию)
+    updateFeedSubscription(newQuery);
+};
 
     // Лента
 
