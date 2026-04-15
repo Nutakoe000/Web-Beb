@@ -1,144 +1,219 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>BaaS Персонализированный проект</title>
-    <style>
-        /* Стили из документа [cite: 8-25] */
-        body { font-family: 'Inter', sans-serif; background: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .auth-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #007bff; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { background: #007bff; color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #0056b3; }
-        .logout-btn { background: #ff4757; padding: 8px 15px; width: auto; font-size: 14px; }
-        .post { background: #fff; border: 1px solid #e2e8f0; padding: 15px; margin-top: 15px; border-radius: 8px; width: 100%; max-width: 500px; }
-        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .time { font-size: 11px; color: #999; margin-left: auto; }
-    </style>
+    <meta charset="UTF-8">
+    <title>BaaS Персонализированный проект</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .auth-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #007bff; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #0056b3; }
+        .logout-btn { background: #ff4757; padding: 8px 15px; width: auto; font-size: 14px; }
+        .post { background: #fff; border: 1px solid #e2e8f0; padding: 15px; margin-top: 15px; border-radius: 8px; width: 100%; max-width: 500px; }
+        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .time { font-size: 11px; color: #999; margin-left: auto; }
+        /* Новые стили */
+        .delete-btn { background: #ff4757; padding: 6px 12px; width: auto; font-size: 13px; margin-left: auto; }
+        .comment { font-size: 13px; color: #555; padding: 6px 0; border-top: 1px solid #f0f0f0; margin-top: 4px; }
+        .comment b { color: #333; }
+        .comment-form { display: flex; gap: 8px; margin-top: 10px; }
+        .comment-form input { margin: 0; padding: 8px; font-size: 13px; }
+        .comment-form button { width: auto; padding: 8px 14px; font-size: 13px; }
+    </style>
 </head>
 <body>
 
 <div id="authSection" class="container" style="text-align: center;">
-    <button id="loginBtn">Войти через Google</button>
-    
-    <div id="userInfo" style="display: none;" class="auth-bar">
-        <img id="userPhoto" class="user-avatar" src="" alt="Avatar">
-        <span id="userName" style="font-weight: bold;"></span>
-        <button id="logoutBtn" class="logout-btn">Выйти</button>
-    </div>
+    <button id="loginBtn">Войти через Google</button>
+    <div id="userInfo" style="display: none;" class="auth-bar">
+        <img id="userPhoto" class="user-avatar" src="" alt="Avatar">
+        <span id="userName" style="font-weight: bold;"></span>
+        <button id="logoutBtn" class="logout-btn">Выйти</button>
+    </div>
 </div>
 
 <div id="messageForm" class="container" style="display: none;">
-    ### Создать запись
-    <input type="text" id="name" placeholder="Имя профиля" readonly>
-    <input type="email" id="email" placeholder="Ваш email" readonly>
-    <input type="text" id="content" placeholder="Что у вас нового?">
-    <button id="mainBtn">Опубликовать в облако</button>
+    <h3>Создать запись</h3>
+    <input type="text" id="name" placeholder="Имя профиля" readonly>
+    <input type="email" id="email" placeholder="Ваш email" readonly>
+    <input type="text" id="content" placeholder="Что у вас нового?">
+    <button id="mainBtn">Опубликовать в облако</button>
 </div>
 
 <div id="feed"></div>
 
 <script type="module">
-    // Импорт Firebase модулей  [cite: 50-52]
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import {
+        getFirestore, collection, addDoc, query, orderBy,
+        onSnapshot, serverTimestamp, updateDoc, doc,
+        increment, deleteDoc  // ← добавили deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-  const firebaseConfig = { 
+    const firebaseConfig = {
+        apiKey: "AIzaSyCy7gn4BC0WbnMfar5PBuDfQY1I-dbTjx0",
+        authDomain: "nutakoe001-1159c.firebaseapp.com",
+        projectId: "nutakoe001-1159c",
+        storageBucket: "nutakoe001-1159c.firebasestorage.app",
+        messagingSenderId: "399913093520",
+        appId: "1:399913093520:web:89ad6df0d7025651edcb15"
+    };
 
-    apiKey: "AIzaSyCy7gn4BC0WbnMfar5PBuDfQY1I-dbTjx0", 
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    authDomain: "nutakoe001-1159c.firebaseapp.com", 
+    // --- АВТОРИЗАЦИЯ ---
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userInfo = document.getElementById('userInfo');
+    const messageForm = document.getElementById('messageForm');
 
-    projectId: "nutakoe001-1159c", 
+    loginBtn.onclick = () => signInWithPopup(auth, provider);
+    logoutBtn.onclick = () => signOut(auth);
 
-    storageBucket: "nutakoe001-1159c.firebasestorage.app", 
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loginBtn.style.display = 'none';
+            userInfo.style.display = 'flex';
+            messageForm.style.display = 'block';
+            document.getElementById('userName').innerText = user.displayName;
+            document.getElementById('userPhoto').src = user.photoURL;
+            document.getElementById('name').value = user.displayName;
+            document.getElementById('email').value = user.email;
+        } else {
+            loginBtn.style.display = 'block';
+            userInfo.style.display = 'none';
+            messageForm.style.display = 'none';
+        }
+    });
 
-    messagingSenderId: "399913093520", 
+    // --- ЛАЙКИ ---
+    window.processLike = async (id) => {
+        await updateDoc(doc(db, "requests", id), { likes: increment(1) });
+    };
 
-    appId: "1:399913093520:web:89ad6df0d7025651edcb15"  
+    // ==========================================
+    // ФУНКЦИЯ 1: УДАЛЕНИЕ ПОСТА (deleteDoc)
+    // ==========================================
+    // Удаляет документ из коллекции "requests" по его ID.
+    // Кнопка показывается только если uid текущего пользователя
+    // совпадает с uid автора поста.
+    window.deletePost = async (id) => {
+        if (!confirm("Удалить этот пост?")) return;
+        try {
+            await deleteDoc(doc(db, "requests", id));
+        } catch (e) {
+            alert("Ошибка удаления. Проверьте правила безопасности Firebase.");
+        }
+    };
 
-  };
+    // ==========================================
+    // ФУНКЦИЯ 2: ДОБАВЛЕНИЕ КОММЕНТАРИЯ (addDoc в субколлекцию)
+    // ==========================================
+    // Комментарии хранятся в субколлекции: requests/{postId}/comments
+    // Это стандартный паттерн Firestore для связанных данных.
+    window.addComment = async (postId) => {
+        const input = document.getElementById(`comment-input-${postId}`);
+        const text = input.value.trim();
+        if (!text) return;
+        if (!auth.currentUser) return alert("Войдите, чтобы комментировать!");
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+        try {
+            // Указываем путь: коллекция "requests" → документ postId → субколлекция "comments"
+            await addDoc(collection(db, "requests", postId, "comments"), {
+                text: text,
+                name: auth.currentUser.displayName,
+                photo: auth.currentUser.photoURL,
+                timestamp: serverTimestamp()
+            });
+            input.value = "";
+        } catch (e) {
+            alert("Ошибка. Проверьте правила безопасности Firebase.");
+        }
+    };
 
-    // --- ЛОГИКА АВТОРИЗАЦИИ ---
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const userInfo = document.getElementById('userInfo');
-    const messageForm = document.getElementById('messageForm');
+    // Подписка на комментарии конкретного поста (вызывается при рендере ленты)
+    function subscribeToComments(postId) {
+        const commentsContainer = document.getElementById(`comments-${postId}`);
+        if (!commentsContainer) return;
 
-    loginBtn.onclick = () => signInWithPopup(auth, provider);
-    logoutBtn.onclick = () => signOut(auth);
+        const q = query(
+            collection(db, "requests", postId, "comments"),
+            orderBy("timestamp", "asc")
+        );
 
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            loginBtn.style.display = 'none';
-            userInfo.style.display = 'flex';
-            messageForm.style.display = 'block';
-            
-            document.getElementById('userName').innerText = user.displayName;
-            document.getElementById('userPhoto').src = user.photoURL;
-            document.getElementById('name').value = user.displayName;
-            document.getElementById('email').value = user.email;
-        } else {
-            loginBtn.style.display = 'block';
-            userInfo.style.display = 'none';
-            messageForm.style.display = 'none';
-        }
-    });
+        // onSnapshot — слушаем изменения в реальном времени
+        onSnapshot(q, (snapshot) => {
+            commentsContainer.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const c = doc.data();
+                commentsContainer.innerHTML += `
+                    <div class="comment">
+                        <b>${c.name || "Аноним"}:</b> ${c.text}
+                    </div>`;
+            });
+        });
+    }
 
-    // --- РАБОТА С ДАННЫМИ ---
-    // Лайки
-    window.processLike = async (id) => {
-        await updateDoc(doc(db, "requests", id), { likes: increment(1) });
-    };
+    // --- ЛЕНТА ---
+    const q = query(collection(db, "requests"), orderBy("timestamp", "desc"));
+    onSnapshot(q, (snapshot) => {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = "";
+        snapshot.forEach((postDoc) => {
+            const data = postDoc.data();
+            const isOwner = auth.currentUser && auth.currentUser.uid === data.uid;
 
-    // Отправка сообщения
-    document.getElementById('mainBtn').onclick = async () => {
-        const content = document.getElementById('content').value;
-        if (!content) return alert("Введите текст сообщения!");
+            feed.innerHTML += `
+                <div class="post">
+                    <div class="post-header">
+                        <img src="${data.photo || 'https://via.placeholder.com/30'}" style="width:30px; border-radius:50%">
+                        <b>${data.name}</b>
+                        <span class="time">${data.timestamp?.toDate().toLocaleTimeString() || '...'}</span>
+                        ${isOwner ? `<button class="delete-btn" onclick="deletePost('${postDoc.id}')">🗑 Удалить</button>` : ''}
+                    </div>
+                    <p>${data.text}</p>
+                    <button class="like-btn" onclick="processLike('${postDoc.id}')">👍 ${data.likes || 0}</button>
 
-        try {
-            await addDoc(collection(db, "requests"), {
-                name: auth.currentUser.displayName,
-                email: auth.currentUser.email,
-                photo: auth.currentUser.photoURL,
-                text: content,
-                likes: 0,
-                timestamp: serverTimestamp()
-            });
-            document.getElementById('content').value = "";
-        } catch (e) {
-            alert("Ошибка безопасности! Проверьте правила (Rules) в Firebase.");
-        }
-    };
+                    <div id="comments-${postDoc.id}"></div>
 
-    // Лента
-    const q = query(collection(db, "requests"), orderBy("timestamp", "desc"));
-    onSnapshot(q, (snapshot) => {
-        const feed = document.getElementById('feed');
-        feed.innerHTML = "";
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            feed.innerHTML += `
-                <div class="post">
-                    <div class="post-header">
-                        <img src="${data.photo || 'https://via.placeholder.com/30'}" class="post-avatar" style="width:30px; border-radius:50%">
-                        <b>${data.name}</b>
-                        <span class="time">${data.timestamp?.toDate().toLocaleTimeString() || '...'}</span>
-                    </div>
-                    <p>${data.text}</p>
-                    <button class="like-btn" onclick="processLike('${doc.id}')">👍 ${data.likes || 0}</button>
-                </div>`;
-        });
-    });
+                    <div class="comment-form">
+                        <input id="comment-input-${postDoc.id}" type="text" placeholder="Написать комментарий...">
+                        <button onclick="addComment('${postDoc.id}')">Отправить</button>
+                    </div>
+                </div>`;
+
+            // Подписываемся на комментарии этого поста
+            subscribeToComments(postDoc.id);
+        });
+    });
+
+    // --- СОЗДАНИЕ ПОСТА ---
+    document.getElementById('mainBtn').onclick = async () => {
+        const content = document.getElementById('content').value;
+        if (!content) return alert("Введите текст сообщения!");
+
+        try {
+            await addDoc(collection(db, "requests"), {
+                name: auth.currentUser.displayName,
+                email: auth.currentUser.email,
+                photo: auth.currentUser.photoURL,
+                uid: auth.currentUser.uid,  // ← ВАЖНО: сохраняем uid для проверки авторства
+                text: content,
+                likes: 0,
+                timestamp: serverTimestamp()
+            });
+            document.getElementById('content').value = "";
+        } catch (e) {
+            alert("Ошибка безопасности! Проверьте правила (Rules) в Firebase.");
+        }
+    };
 </script>
 </body>
 </html>
